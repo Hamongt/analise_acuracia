@@ -2,7 +2,8 @@ install.packages("poLCA")
 install.packages("dplyr")
 library(poLCA)
 library(dplyr)
-dados = DadosDeVDD
+dados = DadosDeVDD[,-13]
+colnames(dados)
 colnames(dados) <- c("mobilidade",
                      "nutricao",
                      "pele_ressecada",
@@ -14,8 +15,7 @@ colnames(dados) <- c("mobilidade",
                      "desidratacao",
                      "conhecimento_cuidador",
                      "anemia",
-                     "incontinencia",
-                     "temperatura_sem_ulcera")
+                     "incontinencia")
 dados = dados %>%
   mutate(across(everything(),
                 ~ifelse(. == "Presente",2,
@@ -31,11 +31,10 @@ f = cbind(mobilidade,
            desidratacao,
            conhecimento_cuidador,
            anemia,
-           incontinencia,
-           temperatura_sem_ulcera) ~ 1
+           incontinencia) ~ 1
 
 lca2 = poLCA(f, dados, nclass = 2, maxiter = 1000, graphs = TRUE)
-lca3 = poLCA(f, dados, nclass = 3, maxiter = 1000, na.rm = FALSE, nrep = 500)
+lca3 = poLCA(f, dados, nclass = 3, maxiter = 1000, na.rm = FALSE)
 lca2$bic
 lca3$bic
 lca2$probs

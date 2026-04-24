@@ -10,8 +10,7 @@ variaveis <- c(
   "desidratacao",
   "conhecimento_cuidador",
   "anemia",
-  "incontinencia",
-  "temperatura_sem_ulcera"
+  "incontinencia"
 )
 
 resultado <- data.frame()

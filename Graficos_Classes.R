@@ -5,7 +5,7 @@ bic <- numeric()
 aic <- numeric()
 
 for(k in 1:10){
-  modelo <- poLCA(f, dados[,-14],
+  modelo <- poLCA(f, dados,
                   nclass = k,
                   maxiter = 1000,
                   graphs = FALSE)
