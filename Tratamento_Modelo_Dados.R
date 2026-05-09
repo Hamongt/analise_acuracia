@@ -25,6 +25,7 @@ f = cbind(mobilidade,
            nutricao,
            pele_ressecada,
            tabagismo,
+           umidade,
            temperatura,
            mucosas,
            edema,
@@ -34,7 +35,7 @@ f = cbind(mobilidade,
            incontinencia) ~ 1
 
 lca2 = poLCA(f, dados, nclass = 2, maxiter = 1000, graphs = TRUE)
-lca3 = poLCA(f, dados, nclass = 3, maxiter = 1000, na.rm = FALSE)
+lca3 = poLCA(f, dados, nclass = 5, maxiter = 1000, na.rm = FALSE)
 lca2$bic
 lca3$bic
 lca2$probs
