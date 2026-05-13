@@ -7,14 +7,25 @@ dadosk = dados[,-13]
 set.seed(2)
 modelo = kmodes(dadosk, modes = 2)
 cluster = modelo$cluster
+dadosk$kmode = cluster
+comp = data.frame(dados$classe,dadosk$kmode)
+
+#IRA
+install.packages("mclust")  # se não tiver
+library(mclust)
+adjustedRandIndex(dados$classe, modelo$cluster)
+
+aggregate(. ~ kmode, data = dadosk, mean)
+table(modelo$cluster)
+
 
 classe = dados$classe
 table(kmodes = modelo$cluster, lca = dados$classe)
 
 library(FactoMineR)
-dadosk <- data.frame(lapply(dadosk, as.factor))
-dadosk <- dadosk[, sapply(dadosk, function(x) length(unique(x)) > 1)]
-mca <- MCA(dadosk, graph = FALSE)
+dadosm <- data.frame(lapply(dadosm, as.factor))
+dadosm <- dadosm[, sapply(dadosm, function(x) length(unique(x)) > 1)]
+mca <- MCA(dadosm, graph = FALSE)
 
 
   # Definir cores mais bonitas
@@ -63,7 +74,7 @@ abline(h = 0, v = 0, col = "gray80", lty = 2)
 # Adicionar legenda
 legend(
   "topright",
-  legend = c("Cluster 1", "Cluster 2"),
+  legend = c("Classe 1", "Classe 2"),
   col = cores,
   pch = 19,
   bty = "n"
@@ -73,14 +84,6 @@ legend(
 mca$var$contrib
 mca$var$coord
 mca$var$cos2
-
-dadosk$kmode = cluster
-comp = data.frame(dados$classe,dadosk$kmode)
-
-#IRA
-install.packages("mclust")  # se não tiver
-library(mclust)
-adjustedRandIndex(dados$classe, modelo$cluster)
 
 #write.csv(dados, "C:/Users/Hamon/Desktop/TCC/dados_Com_Grupo_LCA.csv", row.names = FALSE)
 
@@ -169,3 +172,95 @@ legend(
   col = c("#4c72b0", "black"),
   bty = "n"
 )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Médias por cluster
+perfil <- aggregate(. ~ kmode, data = dadosk, mean)
+
+# Converter médias em proporções
+perfil[,-1] <- perfil[,-1] - 1
+
+# Formato longo
+perfil_long <- pivot_longer(
+  perfil,
+  cols = -kmode,
+  names_to = "Variavel",
+  values_to = "Proporcao"
+)
+
+# Renomear clusters
+perfil_long$kmode <- factor(
+  perfil_long$kmode,
+  labels = c("Cluster 1", "Cluster 2")
+)
+
+# Barplot agrupado
+ggplot(
+  perfil_long,
+  aes(
+    x = Variavel,
+    y = Proporcao,
+    fill = kmode
+  )
+) +
+  
+  geom_bar(
+    stat = "identity",
+    position = position_dodge(width = 0.8),
+    width = 0.7
+  ) +
+  
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0,1)
+  ) +
+  
+  scale_fill_manual(
+    values = c(
+      "Cluster 1" = "#0072B2",
+      "Cluster 2" = "#D55E00"
+    )
+  ) +
+  
+  labs(
+    x = "Fatores de risco",
+    y = "Proporção de presença",
+    fill = "Agrupamentos"
+  ) +
+  
+  theme_minimal(base_size = 15) +
+  
+  theme(
+    legend.position = "top",
+    
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      size = 12
+    ),
+    
+    axis.text.y = element_text(size = 13),
+    
+    axis.title = element_text(size = 18),
+    
+    legend.title = element_text(size = 15),
+    legend.text = element_text(size = 13),
+    
+    panel.grid.minor = element_blank()
+  )
