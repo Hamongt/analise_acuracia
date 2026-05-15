@@ -147,20 +147,20 @@ y_max <- max(socio$Idade, na.rm = TRUE)
 y_min <- min(socio$Idade, na.rm = TRUE)
 y_range <- y_max - y_min
 
-ggplot(socio, aes(x = as.factor(Quantidade), y = Idade)) +
+ggplot(socio,aes(x = Comorbidades_cat, y = Idade)) +
   geom_boxplot(fill = "#2E86AB",
                color = "#1B4965",
                alpha = 0.7,
                outlier.color = "#D62828",
                outlier.size = 1.5) +
-  geom_jitter(aes(color = as.factor(Quantidade)), 
+  geom_jitter(aes(color = Comorbidades_cat), 
               width = 0.2, 
               height = 0, 
               alpha = 0.5, 
               size = 1) +
   # Posicionar textos ACIMA do boxplot (fora do gráfico)
   geom_text(data = stats_renda,
-            aes(x = as.factor(Quantidade), 
+            aes(x = Comorbidades_cat, 
                 y = y_max + (y_range * 0.05),  # 5% acima do máximo
                 label = paste0("Média: ", media_idade, "\nn=", n)),
             size = 3.2,
@@ -170,7 +170,7 @@ ggplot(socio, aes(x = as.factor(Quantidade), y = Idade)) +
   scale_color_manual(values = c("#483D8B", "#483D8B", "#483D8B", "#483D8B", "#D62828", "#E58A8A")) +
   # Ajustar limites do eixo Y para acomodar os textos
   coord_cartesian(ylim = c(y_min, y_max + (y_range * 0.15))) +
-  labs(title = "Distribuição da Idade por Número de Comorbidades",
+  labs(
        subtitle = paste0("Média global de comorbidades = ", round(mean(socio$Quantidade, na.rm = TRUE), 2),
                          " | Desvio Padrão = ", round(sd(socio$Quantidade, na.rm = TRUE), 2)),
        x = "Número de Comorbidades",
@@ -197,4 +197,144 @@ ggplot(socio, aes(x = as.factor(Quantidade), y = Idade)) +
  # geom_density_ridges(alpha = 0.7) 
 
 
- 
+library(ggplot2)
+library(dplyr)
+
+# Criar categoria agrupando 4 e 5 comorbidades
+socio$Comorbidades_cat <- ifelse(
+  socio$Quantidade >= 4,
+  "4 ou mais",
+  as.character(socio$Quantidade)
+)
+
+# Transformar em fator ordenado
+socio$Comorbidades_cat <- factor(
+  socio$Comorbidades_cat,
+  levels = c("0", "1", "2", "3", "4 ou mais")
+)
+
+# Estatísticas para os textos do gráfico
+stats_renda <- socio %>%
+  group_by(Comorbidades_cat) %>%
+  summarise(
+    media_idade = round(mean(Idade, na.rm = TRUE), 1),
+    n = n(),
+    .groups = "drop"
+  )
+
+# Valores auxiliares do eixo Y
+y_min <- min(socio$Idade, na.rm = TRUE)
+y_max <- max(socio$Idade, na.rm = TRUE)
+y_range <- y_max - y_min
+
+# Gráfico
+ggplot(socio, aes(x = Comorbidades_cat, y = Idade)) +
+  
+  # Boxplot
+  geom_boxplot(
+    fill = "#2E86AB",
+    color = "#1B4965",
+    alpha = 0.7,
+    outlier.color = "#D62828",
+    outlier.size = 1.5
+  ) +
+  
+  # Pontos individuais
+  geom_jitter(
+    aes(color = Comorbidades_cat),
+    width = 0.2,
+    height = 0,
+    alpha = 0.5,
+    size = 1
+  ) +
+  
+  # Texto acima dos boxplots
+  geom_text(
+    data = stats_renda,
+    aes(
+      x = Comorbidades_cat,
+      y = y_max + (y_range * 0.05),
+      label = paste0(
+        "Média: ", media_idade,
+        "\nn=", n
+      )
+    ),
+    size = 3.2,
+    color = "#1B4965",
+    fontface = "bold",
+    hjust = 0.5
+  ) +
+  
+  # Cores dos pontos
+  scale_color_manual(
+    values = c(
+      "#483D8B",
+      "#483D8B",
+      "#483D8B",
+      "#483D8B",
+      "#D62828"
+    )
+  ) +
+  
+  # Ajuste do eixo Y
+  coord_cartesian(
+    ylim = c(
+      y_min,
+      y_max + (y_range * 0.15)
+    )
+  ) +
+  
+  # Títulos
+  labs(x = "Número de Comorbidades",
+    y = "Idade (anos)"
+  ) +
+  
+  # Tema
+  theme_minimal(base_size = 12) +
+  
+  theme(
+    plot.title = element_text(
+      size = 20,
+      face = "bold",
+      color = "#1B4965",
+      hjust = 0.5
+    ),
+    
+    plot.subtitle = element_text(
+      size = 20,
+      color = "#5C677D",
+      hjust = 0.5,
+      margin = margin(b = 15)
+    ),
+    
+    axis.title = element_text(
+      size = 20,
+      face = "bold",
+      color = "#1B4965"
+    ),
+    
+    axis.text = element_text(
+      size = 15,
+      color = "#5C677D"
+    ),
+    
+    axis.text.x = element_text(face = "bold"),
+    
+    panel.grid.minor = element_blank(),
+    
+    panel.grid.major.x = element_blank(),
+    
+    panel.grid.major.y = element_line(
+      color = "#E0E0E0",
+      linewidth = 0.3
+    ),
+    
+    plot.background = element_rect(
+      fill = "white",
+      color = NA
+    ),
+    
+    plot.margin = margin(20, 20, 20, 20),
+    
+    legend.position = "none"
+  )
