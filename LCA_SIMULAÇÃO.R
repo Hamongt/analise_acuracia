@@ -75,7 +75,7 @@ bic <- numeric()
 aic <- numeric()
 
 for(k in 1:10){
-  modelo <- poLCA(f, dados[,-13],
+  modelo <- poLCA(sim, si[,-13],
                   nclass = k,
                   maxiter = 500,
                   graphs = FALSE)
@@ -130,188 +130,144 @@ ggplot(df, aes(x = classes, y = valor, color = criterio, group = criterio)) +
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 library(poLCA)
 library(ggplot2)
+library(dplyr)
+library(tidyr)
 
-set.seed(1)
+# Ajustar modelo
+l2 <- poLCA(sim, simu, nclass = 2, maxiter = 1000, graphs = FALSE)
 
-bic <- numeric()
-aic <- numeric()
-g2  <- numeric()
-x2  <- numeric()
+# Extrair probabilidades condicionais
+probs <- l2$probs
 
-for(k in 1:10){
-  
-  modelo <- poLCA(
-    sim,
-    simu[,-13],
-    nclass = k,
-    maxiter = 500,
-    graphs = FALSE
-  )
-  
-  bic[k] <- modelo$bic
-  aic[k] <- modelo$aic
-  g2[k]  <- modelo$Gsq
-  x2[k]  <- modelo$Chisq
-}
-
-# Criar dataframe para ggplot
-df <- data.frame(
-  classes = rep(1:10, 4),
-  valor = c(bic, aic, g2, x2),
-  criterio = rep(c("BIC", "AIC", "G2", "X2"), each = 10)
+# Organizar dataframe
+df_plot <- data.frame(
+  variavel = names(probs),
+  Classe1 = sapply(probs, function(x) x[2,2]),
+  Classe2 = sapply(probs, function(x) x[1,2])
 )
 
-# Encontrar melhores modelos
-melhor_bic <- which.min(bic)
-melhor_aic <- which.min(aic)
-melhor_g2  <- which.min(g2)
-melhor_x2  <- which.min(x2)
+# Transformar formato
+df_long <- pivot_longer(
+  df_plot,
+  cols = starts_with("Classe"),
+  names_to = "Classe",
+  values_to = "Probabilidade"
+)
 
 # Gráfico
-ggplot(df, aes(x = classes, y = valor, color = criterio, group = criterio)) +
+ggplot(df_long,
+       aes(x = variavel,
+           y = Probabilidade,
+           color = Classe,
+           group = Classe)) +
   
-  geom_line(size = 1.2) +
-  geom_point(size = 3) +
+  geom_line(size = 1.5) +
+  geom_point(size = 4) +
   
-  # Destacar menor BIC
-  geom_point(
-    data = df[df$classes == melhor_bic & df$criterio == "BIC", ],
-    aes(x = classes, y = valor),
-    color = "#56B4E9",
-    size = 5,
-    shape = 1,
-    stroke = 1.5
-  ) +
-  
-  # Destacar menor AIC
-  geom_point(
-    data = df[df$classes == melhor_aic & df$criterio == "AIC", ],
-    aes(x = classes, y = valor),
-    color = "#E69F00",
-    size = 5,
-    shape = 1,
-    stroke = 1.5
-  ) +
-  
-  # Destacar menor G2
-  geom_point(
-    data = df[df$classes == melhor_g2 & df$criterio == "G2", ],
-    aes(x = classes, y = valor),
-    color = "#009E73",
-    size = 5,
-    shape = 1,
-    stroke = 1.5
-  ) +
-  
-  # Destacar menor X2
-  geom_point(
-    data = df[df$classes == melhor_x2 & df$criterio == "X2", ],
-    aes(x = classes, y = valor),
-    color = "#CC79A7",
-    size = 5,
-    shape = 1,
-    stroke = 1.5
-  ) +
-  
-  labs(
-    x = "Número de classes latentes",
-    y = "Valor da estatística",
-    color = "Critério"
+  scale_y_continuous(
+    limits = c(0,1),
+    breaks = seq(0,1,0.2)
   ) +
   
   scale_color_manual(
     values = c(
-      "AIC" = "#E69F00",
-      "BIC" = "#56B4E9",
-      "G2"  = "#009E73",
-      "X2"  = "#CC79A7"
+      "Classe1" = "#0072B2",
+      "Classe2" = "#D55E00"
+    ),
+    labels = c(
+      "Classe 1",
+      "Classe 2"
     )
   ) +
   
-  scale_x_continuous(breaks = 1:10) +
+  labs(
+    x = "Variáveis",
+    y = "Probabilidade condicional",
+    color = "Classes Latentes"
+  ) +
   
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 15) +
   
   theme(
-    plot.title = element_text(face = "bold", size = 16),
-    plot.subtitle = element_text(size = 12, color = "gray30"),
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      size = 22
+    ),
     
-    legend.position = "bottom",
+    axis.text.y = element_text(size = 22),
     
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_line(color = "gray90", size = 0.3),
+    axis.title = element_text(size = 22),
     
-    axis.text.x = element_text(size = 20),
-    axis.text.y = element_text(size = 20),
+    legend.position = "top",
     
-    axis.title.x = element_text(size = 25),
-    axis.title.y = element_text(size = 25),
+    legend.title = element_text(size = 23),
+    legend.text = element_text(size = 23),
     
-    legend.text = element_text(size = 16),
-    legend.title = element_text(size = 18)
+    panel.grid.minor = element_blank()
   )
+
+library(mclust)
+adjustedRandIndex(simu$classe_real,si$LCA )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

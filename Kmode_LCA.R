@@ -14,8 +14,11 @@ comp = data.frame(dados$classe,dadosk$kmode)
 install.packages("mclust")  # se não tiver
 library(mclust)
 adjustedRandIndex(dados$classe, modelo$cluster)
-
-aggregate(. ~ kmode, data = dadosk, mean)
+#MUDAR ISSO PQ N É LEGAL A MEDIA E SIM A FREQUENCIA 
+dadosk %>%
+  group_by(kmode) %>%
+  summarise(across(everything(),
+                   ~mean(. == 2)))
 table(modelo$cluster)
 
 
